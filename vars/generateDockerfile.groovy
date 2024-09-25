@@ -6,8 +6,14 @@ def call(String projectPath) {
         // Log the detected project type in the Jenkins console
         echo "Detected project type: ${projectType}"
 
-        // Write the appropriate Dockerfile based on the detected project type
-        writeDockerfile(projectType, projectPath)
+        // Check if Dockerfile already exists before writing a new one
+        if (!dockerfileExists(projectPath)) {
+            // Write the appropriate Dockerfile based on the detected project type
+            writeDockerfile(projectType, projectPath)
+        } else {
+            echo "Dockerfile already exists at ${projectPath}/Dockerfile, skipping generation."
+        }
+
         return projectType
     } else {
         // If unable to detect project type, throw an error
@@ -39,6 +45,11 @@ def detectProjectType(String projectPath) {
 
     // If no match, return null to indicate the type couldn't be detected
     return null
+}
+
+// Function to check if a Dockerfile already exists in the project directory
+def dockerfileExists(String projectPath) {
+    return fileExists("${projectPath}/Dockerfile")
 }
 
 // Function to write the Dockerfile for the detected project type
