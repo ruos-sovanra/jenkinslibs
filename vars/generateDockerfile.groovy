@@ -29,9 +29,11 @@ def detectProjectType(String projectPath) {
             return 'react'
         }
     }
-    // Check for Java Spring Boot projects by looking for a pom.xml file
+    // Check for Java Spring Boot projects by looking for pom.xml (Maven) or build.gradle (Gradle) file
     else if (fileExists("${projectPath}/pom.xml")) {
-        return 'springboot'
+        return 'springboot-maven'
+    } else if (fileExists("${projectPath}/build.gradle")) {
+        return 'springboot-gradle'
     }
 
     // If no match, return null to indicate the type couldn't be detected
