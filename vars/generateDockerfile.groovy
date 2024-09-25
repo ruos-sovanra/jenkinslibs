@@ -5,12 +5,13 @@ def call(String projectPath) {
     if (projectType) {
         // Log the detected project type in the Jenkins console
         echo "Detected project type: ${projectType}"
+
         // Write the appropriate Dockerfile based on the detected project type
         writeDockerfile(projectType, projectPath)
         return projectType
     } else {
         // If unable to detect project type, throw an error
-        error "Unable to detect the project type."
+        error "Unable to detect the project type for ${projectPath}."
     }
 }
 
@@ -42,12 +43,17 @@ def detectProjectType(String projectPath) {
 
 // Function to write the Dockerfile for the detected project type
 def writeDockerfile(String projectType, String projectPath) {
-    // Load the appropriate Dockerfile template from the shared library's resources
-    def dockerfileContent = libraryResource "dockerfileTemplates/Dockerfile-${projectType}"
+    try {
+        // Load the appropriate Dockerfile template from the shared library's resources
+        def dockerfileContent = libraryResource "dockerfileTemplates/Dockerfile-${projectType}"
 
-    // Write the loaded Dockerfile content into the project directory
-    writeFile file: "${projectPath}/Dockerfile", text: dockerfileContent
+        // Write the loaded Dockerfile content into the project directory
+        writeFile file: "${projectPath}/Dockerfile", text: dockerfileContent
 
-    // Log the Dockerfile creation to the Jenkins console
-    echo "Dockerfile written for ${projectType} project at ${projectPath}/Dockerfile"
+        // Log the Dockerfile creation to the Jenkins console
+        echo "Dockerfile successfully written for ${projectType} project at ${projectPath}/Dockerfile"
+    } catch (Exception e) {
+        // Handle any errors in writing the Dockerfile
+        error "Failed to write Dockerfile for ${projectType} project: ${e.message}"
+    }
 }
