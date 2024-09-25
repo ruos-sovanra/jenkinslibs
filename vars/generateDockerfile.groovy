@@ -42,6 +42,10 @@ def detectProjectType(String projectPath) {
     } else if (fileExists("${projectPath}/build.gradle")) {
         return 'springboot-gradle'
     }
+    // Check for Flutter projects by looking for pubspec.yaml file
+    else if (fileExists("${projectPath}/pubspec.yaml")) {
+        return 'flutter'
+    }
 
     // If no match, return null to indicate the type couldn't be detected
     return null
