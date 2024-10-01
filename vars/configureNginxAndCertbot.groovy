@@ -20,7 +20,7 @@ def call(String subdomain, String domain, String deployPort) {
     folder_name="${subdomain}.${domain}"
     file_path="/etc/nginx/sites-available/\${folder_name}"
 
-    # Write the Nginx configuration to the file
+    # Write the specific Nginx configuration to the file
     cat > \${file_path} <<EOL
     server {
         listen 80;
@@ -37,6 +37,6 @@ def call(String subdomain, String domain, String deployPort) {
     EOL
 
     # Create a symlink in /etc/nginx/sites-enabled/ to enable the site
-    ln -s \${file_path} /etc/nginx/sites-enabled/\${folder_name}
+    ln -sf \${file_path} /etc/nginx/sites-enabled/\${folder_name}
     """
 }
