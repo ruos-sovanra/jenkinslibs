@@ -23,6 +23,12 @@ def call(String subdomain, String domain, String deployPort) {
         NGINX_CONF_LINK="/etc/nginx/sites-enabled/${subdomain}.${domain}"
         EMAIL="admin@${domain}"
 
+        # Ensure the directory for Nginx config exists
+        if [ ! -d "/etc/nginx/sites-available/${subdomain}.${domain}" ]; then
+            echo "Creating directory /etc/nginx/sites-available..."
+            sudo mkdir -p /etc/nginx/sites-available/${subdomain}.${domain}
+        fi
+
         # Check and install Nginx and Certbot if missing
         PACKAGES=""
         if ! command -v nginx > /dev/null; then
