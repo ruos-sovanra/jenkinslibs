@@ -19,21 +19,28 @@ def call(String subdomain, String domain, String deployPort) {
 
         # Configure Nginx
         NGINX_CONF="/etc/nginx/sites-available/${subdomain}.${domain}"
+        NGINX_CONF_DIR=$(dirname $NGINX_CONF)
+
+        # Create the directory if it doesn't exist
+        if [ ! -d "$NGINX_CONF_DIR" ]; then
+            sudo mkdir -p $NGINX_CONF_DIR
+        fi
+
         echo "Configuring Nginx for ${subdomain}.${domain}..."
         sudo tee $NGINX_CONF > /dev/null <<EOL
-server {
-    listen 80;
-    server_name ${subdomain}.${domain};
+        server {
+            listen 80;
+            server_name ${subdomain}.${domain};
 
-    location / {
-        proxy_pass http://localhost:${deployPort};
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-}
-EOL
+            location / {
+                proxy_pass http://localhost:${deployPort};
+                proxy_set_header Host \$host;
+                proxy_set_header X-Real-IP \$remote_addr;
+                proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto \$scheme;
+            }
+        }
+        EOL
 
         # Enable Nginx configuration
         sudo ln -sf /etc/nginx/sites-available/${subdomain}.${domain} /etc/nginx/sites-enabled/
