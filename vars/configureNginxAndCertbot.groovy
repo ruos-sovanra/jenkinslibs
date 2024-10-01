@@ -1,4 +1,8 @@
 def call(String subdomain, String domain, String deployPort) {
+    if (!subdomain || !domain || !deployPort) {
+        error "subdomain, domain, and deployPort must be provided"
+    }
+
     sh '''
         #!/bin/bash
         # Install Nginx and Certbot if not installed

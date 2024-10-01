@@ -1,17 +1,11 @@
 def call(String projectPath) {
-    // Detect the project type based on the project files
     def projectType = detectProjectType(projectPath)
 
     if (projectType) {
-        // Log the detected project type in the Jenkins console
         echo "Detected project type: ${projectType}"
 
-        // Check if Dockerfile already exists before writing a new one
         if (!dockerfileExists(projectPath)) {
-            // Detect the package manager for Node.js projects
             def packageManager = detectPackageManager(projectPath)
-
-            // Write the appropriate Dockerfile based on the detected project type and package manager
             writeDockerfile(projectType, projectPath, packageManager)
         } else {
             echo "Dockerfile already exists at ${projectPath}/Dockerfile, skipping generation."
@@ -19,42 +13,33 @@ def call(String projectPath) {
 
         return projectType
     } else {
-        // If unable to detect project type, throw an error
         error "Unable to detect the project type for ${projectPath}."
     }
 }
 
-// Function to detect the project type based on the project directory structure
+def dockerfileExists(String projectPath) {
+    return fileExists("${projectPath}/Dockerfile")
+}
+
 def detectProjectType(String projectPath) {
-    // Check for Node.js-based projects by looking for a package.json file
     if (fileExists("${projectPath}/package.json")) {
         def packageJson = readJSON file: "${projectPath}/package.json"
-
-        // Check for Next.js project by identifying 'next' in dependencies
         if (packageJson.dependencies?.'next') {
             return 'nextjs'
-        }
-        // Check for React project by identifying 'react' in dependencies
-        else if (packageJson.dependencies?.'react') {
+        } else if (packageJson.dependencies?.'react') {
             return 'react'
         }
-    }
-    // Check for Java Spring Boot projects by looking for pom.xml (Maven) or build.gradle (Gradle) file
-    else if (fileExists("${projectPath}/pom.xml")) {
+    } else if (fileExists("${projectPath}/pom.xml")) {
         return 'springboot-maven'
     } else if (fileExists("${projectPath}/build.gradle")) {
         return 'springboot-gradle'
-    }
-    // Check for Flutter projects by looking for pubspec.yaml file
-    else if (fileExists("${projectPath}/pubspec.yaml")) {
+    } else if (fileExists("${projectPath}/pubspec.yaml")) {
         return 'flutter'
     }
 
-    // If no match, return null to indicate the type couldn't be detected
     return null
 }
 
-// Function to detect the package manager for Node.js projects
 def detectPackageManager(String projectPath) {
     if (fileExists("${projectPath}/package-lock.json")) {
         return 'npm'
@@ -65,30 +50,43 @@ def detectPackageManager(String projectPath) {
     } else if (fileExists("${projectPath}/bun.lockb")) {
         return 'bun'
     }
-    return 'npm' // Default to npm if no lock file is found
+    return 'npm'
 }
 
-// Function to check if a Dockerfile already exists in the project directory
-def dockerfileExists(String projectPath) {
-    return fileExists("${projectPath}/Dockerfile")
-}
-
-// Function to write the Dockerfile for the detected project type
 def writeDockerfile(String projectType, String projectPath, String packageManager) {
     try {
-        // Load the appropriate Dockerfile template from the shared library's resources
         def dockerfileContent = libraryResource "dockerfileTemplates/Dockerfile-${projectType}"
-
-        // Replace the package manager placeholder in the Dockerfile template
         dockerfileContent = dockerfileContent.replaceAll("\\{\\{packageManager\\}\\}", packageManager)
-
-        // Write the loaded Dockerfile content into the project directory
         writeFile file: "${projectPath}/Dockerfile", text: dockerfileContent
-
-        // Log the Dockerfile creation to the Jenkins console
         echo "Dockerfile successfully written for ${projectType} project at ${projectPath}/Dockerfile"
     } catch (Exception e) {
-        // Handle any errors in writing the Dockerfile
         error "Failed to write Dockerfile for ${projectType} project: ${e.message}"
+    }
+}
+
+def pushDockerImage(String dockerImageName, String dockerImageTag, String credentialsId) {
+    try {
+        withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+            def dockerHubRepo = "${DOCKER_USER}/${dockerImageName}:${dockerImageTag}"
+
+            // Docker login
+            sh """
+            docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
+            """
+
+            // Tag the image for the registry
+            sh """
+            docker tag ${dockerImageName}:${dockerImageTag} ${dockerHubRepo}
+            """
+
+            // Push the image to Docker Hub
+            sh """
+            docker push ${dockerHubRepo}
+            """
+
+            echo "Image pushed to Docker Hub: ${dockerHubRepo}"
+        }
+    } catch (Exception e) {
+        error "Failed to push Docker image: ${e.message}"
     }
 }
