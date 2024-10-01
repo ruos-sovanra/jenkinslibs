@@ -13,7 +13,8 @@ def call(String subdomain, String domain, String deployPort) {
         error "subdomain, domain, and deployPort cannot be empty"
     }
 
-    sh '''
+    // Use double quotes for the sh block to allow Groovy variable interpolation
+    sh """
         #!/bin/bash
         set -e  # Exit on error
 
@@ -34,14 +35,14 @@ def call(String subdomain, String domain, String deployPort) {
         fi
 
         if [ -n "$PACKAGES" ]; then
-            echo "Installing necessary packages: $PACKAGES"
+            echo "Installing necessary packages: \$PACKAGES"
             sudo apt-get update
-            sudo apt-get install -y $PACKAGES
+            sudo apt-get install -y \$PACKAGES
         fi
 
         # Create Nginx configuration
         echo "Configuring Nginx for ${subdomain}.${domain}..."
-        sudo tee $NGINX_CONF > /dev/null <<EOL
+        sudo tee \$NGINX_CONF > /dev/null <<EOL
         server {
             listen 80;
             server_name ${subdomain}.${domain};
@@ -57,9 +58,9 @@ def call(String subdomain, String domain, String deployPort) {
         EOL
 
         # Enable the site by creating a symbolic link
-        if [ ! -L "$NGINX_CONF_LINK" ]; then
+        if [ ! -L "\$NGINX_CONF_LINK" ]; then
             echo "Enabling site for ${subdomain}.${domain}..."
-            sudo ln -sf $NGINX_CONF $NGINX_CONF_LINK
+            sudo ln -sf \$NGINX_CONF \$NGINX_CONF_LINK
         fi
 
         # Test and restart Nginx
@@ -68,12 +69,12 @@ def call(String subdomain, String domain, String deployPort) {
 
         # Obtain SSL certificate with Certbot
         echo "Obtaining SSL certificate for ${subdomain}.${domain}..."
-        sudo certbot --nginx -d ${subdomain}.${domain} --non-interactive --agree-tos --redirect -m $EMAIL
+        sudo certbot --nginx -d ${subdomain}.${domain} --non-interactive --agree-tos --redirect -m \$EMAIL
 
         # Final Nginx restart
         echo "Restarting Nginx to apply changes..."
         sudo systemctl restart nginx
 
         echo "HTTPS configured for https://${subdomain}.${domain}"
-    '''
+    """
 }
