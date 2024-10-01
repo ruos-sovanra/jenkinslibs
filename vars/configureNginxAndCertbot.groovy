@@ -20,10 +20,6 @@ def call(String subdomain, String domain, String deployPort) {
     folder_name="${subdomain}.${domain}"
     file_path="/etc/nginx/sites-available/\${folder_name}"
 
-    # Create directory if it doesn't exist
-    if [ ! -d "/etc/nginx/sites-available/\${folder_name}" ]; then
-        sudo mkdir -p "/etc/nginx/sites-available/\${folder_name}"
-    fi
 
     # Write the Nginx configuration to the file
     sudo bash -c "cat > \${file_path} <<EOL
