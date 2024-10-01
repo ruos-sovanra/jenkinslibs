@@ -13,6 +13,8 @@ def call(String subdomain, String domain, String deployPort) {
         #!/bin/bash
         set -e  # Exit on error
 
+        mkdir -p /etc/nginx/sites-available/${subdomain}.${domain}
+
         # Paths
         NGINX_CONF="/etc/nginx/sites-available/${subdomain}.${domain}"
         NGINX_CONF_LINK="/etc/nginx/sites-enabled/${subdomain}.${domain}"
