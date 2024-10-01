@@ -8,8 +8,11 @@ def call(String projectPath) {
 
         // Check if Dockerfile already exists before writing a new one
         if (!dockerfileExists(projectPath)) {
-            // Write the appropriate Dockerfile based on the detected project type
-            writeDockerfile(projectType, projectPath)
+            // Detect the package manager for Node.js projects
+            def packageManager = detectPackageManager(projectPath)
+
+            // Write the appropriate Dockerfile based on the detected project type and package manager
+            writeDockerfile(projectType, projectPath, packageManager)
         } else {
             echo "Dockerfile already exists at ${projectPath}/Dockerfile, skipping generation."
         }
@@ -51,16 +54,33 @@ def detectProjectType(String projectPath) {
     return null
 }
 
+// Function to detect the package manager for Node.js projects
+def detectPackageManager(String projectPath) {
+    if (fileExists("${projectPath}/package-lock.json")) {
+        return 'npm'
+    } else if (fileExists("${projectPath}/yarn.lock")) {
+        return 'yarn'
+    } else if (fileExists("${projectPath}/pnpm-lock.yaml")) {
+        return 'pnpm'
+    } else if (fileExists("${projectPath}/bun.lockb")) {
+        return 'bun'
+    }
+    return 'npm' // Default to npm if no lock file is found
+}
+
 // Function to check if a Dockerfile already exists in the project directory
 def dockerfileExists(String projectPath) {
     return fileExists("${projectPath}/Dockerfile")
 }
 
 // Function to write the Dockerfile for the detected project type
-def writeDockerfile(String projectType, String projectPath) {
+def writeDockerfile(String projectType, String projectPath, String packageManager) {
     try {
         // Load the appropriate Dockerfile template from the shared library's resources
         def dockerfileContent = libraryResource "dockerfileTemplates/Dockerfile-${projectType}"
+
+        // Replace the package manager placeholder in the Dockerfile template
+        dockerfileContent = dockerfileContent.replaceAll("\\{\\{packageManager\\}\\}", packageManager)
 
         // Write the loaded Dockerfile content into the project directory
         writeFile file: "${projectPath}/Dockerfile", text: dockerfileContent
