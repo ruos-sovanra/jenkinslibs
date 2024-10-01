@@ -21,7 +21,7 @@ def call(String subdomain, String domain, String deployPort) {
     file_path="/etc/nginx/sites-available/\${folder_name}"
 
     # Write the specific Nginx configuration to the file
-    cat > \${file_path} <<EOL
+    cat  << EOF > \${file_path}
     server {
         listen 80;
         server_name ${subdomain}.${domain};
@@ -34,7 +34,7 @@ def call(String subdomain, String domain, String deployPort) {
             proxy_set_header X-Forwarded-Proto \$scheme;
         }
     }
-    EOL
+    EOF
 
     # Create a symlink in /etc/nginx/sites-enabled/ to enable the site
     ln -sf \${file_path} /etc/nginx/sites-enabled/\${folder_name}
