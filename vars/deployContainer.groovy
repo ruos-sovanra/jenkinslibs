@@ -1,47 +1,19 @@
-def call(String subdomain, String domain, String deployPort) {
-    // Check if the variables are passed
-    if (!subdomain || !domain || !deployPort) {
-        error "subdomain, domain, and deployPort must be provided"
-    }
-
-    // Echo the variables to check if they are passed down correctly
-    echo "Subdomain: ${subdomain}"
-    echo "Domain: ${domain}"
-    echo "Deploy Port: ${deployPort}"
-
-    if (subdomain.trim() == "" || domain.trim() == "" || deployPort.trim() == "") {
-        error "subdomain, domain, and deployPort cannot be empty"
-    }
-
-    // Use double quotes for the sh block to allow Groovy variable interpolation
+def call(String containerName, String imageName, String imageTag, String deployPort) {
     sh """
-    #!/bin/bash
+        #!/bin/bash
+        # Check if the container is running and stop it
+        if [ \$(docker ps -q -f name=${containerName}) ]; then
+            echo "Stopping running container ${containerName}..."
+            docker stop ${containerName}
+        fi
 
-    folder_name="${subdomain}.${domain}"
-    file_path="/etc/nginx/sites-available/\${folder_name}"
+        # Remove the container if it exists
+        if [ \$(docker ps -a -q -f name=${containerName}) ]; then
+            echo "Removing container ${containerName}..."
+            docker rm ${containerName}
+        fi
 
-    # Create directory if it doesn't exist
-    if [ ! -d "/etc/nginx/sites-available/\${folder_name}" ]; then
-        sudo mkdir -p "/etc/nginx/sites-available/\${folder_name}"
-    fi
-
-    # Write the Nginx configuration to the file
-    sudo bash -c "cat > \${file_path} <<EOL
-    server {
-        listen 80;
-        server_name ${subdomain}.${domain};
-
-        location / {
-            proxy_pass http://localhost:${deployPort};
-            proxy_set_header Host \$host;
-            proxy_set_header X-Real-IP \$remote_addr;
-            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto \$scheme;
-        }
-    }
-    EOL"
-
-    # Create a symlink in /etc/nginx/sites-enabled/ to enable the site
-    sudo ln -s \${file_path} /etc/nginx/sites-enabled/\${folder_name}
+        # Start a new container
+        docker run -d --name ${containerName} -p ${deployPort}:3000 ${imageName}:${imageTag}
     """
 }
