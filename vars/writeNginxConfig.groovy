@@ -23,37 +23,4 @@ def call(String subdomain, String domain, String deployPort) {
     }
     EOF
 
-
-    def nginxConfig = """
-    server {
-        listen 80;
-        server_name ${subdomain}.${domain};
-
-        location / {
-            proxy_pass http://localhost:${deployPort};
-            proxy_set_header Host \$host;
-            proxy_set_header X-Real-IP \$remote_addr;
-            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto \$scheme;
-        }
-    }
-    """
-
-    try {
-        echo "Writing Nginx config to ${filePath}"
-        sh """
-        echo '${nginxConfig}' > ${filePath}
-        """
-        echo "Nginx config written successfully"
-
-        // Create symlink in sites-enabled
-        sh "ln -sf ${filePath} ${symlinkPath}"
-        echo "Symlink created successfully"
-
-        // Reload Nginx to apply changes
-        sh "nginx -s reload"
-        echo "Nginx reloaded successfully"
-    } catch (Exception e) {
-        error "Failed to write Nginx config or reload: ${e.getMessage()}"
-    }
 }
