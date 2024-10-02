@@ -24,7 +24,9 @@ def call(String subdomain, String domain, String deployPort) {
 
     try {
         echo "Writing Nginx config to ${filePath}"
-        writeFile(file: filePath, text: nginxConfig)
+        sh """
+        echo '${nginxConfig}' > ${filePath}
+        """
         echo "Nginx config written successfully"
 
         // Create symlink in sites-enabled
