@@ -26,5 +26,5 @@ def call(String subdomain, String domain, String deployPort) {
     """
 
     writeFile file: filePath, text: nginxConfig
-    sh "ln -sf ${filePath} /etc/nginx/sites-enabled/${folderName}"
+    sh "ln -s ${filePath} /etc/nginx/sites-enabled/"
 }
