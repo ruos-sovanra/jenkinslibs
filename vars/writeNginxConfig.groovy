@@ -1,14 +1,11 @@
 def call(String subdomain, String domain, String deployPort) {
-    if (!subdomain || !domain || !deployPort) {
-        error "subdomain, domain, and deployPort must be provided"
-    }
-
-    if (subdomain.trim() == "" || domain.trim() == "" || deployPort.trim() == "") {
-        error "subdomain, domain, and deployPort cannot be empty"
+    if (!subdomain?.trim() || !domain?.trim() || !deployPort?.trim()) {
+        error "subdomain, domain, and deployPort must be provided and cannot be empty"
     }
 
     def folderName = "${subdomain}.${domain}"
     def filePath = "/etc/nginx/sites-available/${folderName}"
+    def symlinkPath = "/etc/nginx/sites-enabled/"
 
     def nginxConfig = """
     server {
@@ -25,9 +22,19 @@ def call(String subdomain, String domain, String deployPort) {
     }
     """
 
-    echo "Writing Nginx config to ${filePath}"
-    writeFile file: filePath, text: nginxConfig
-    echo "Nginx config written successfully"
+    try {
+        echo "Writing Nginx config to ${filePath}"
+        writeFile(file: filePath, text: nginxConfig)
+        echo "Nginx config written successfully"
 
+        // Create symlink in sites-enabled
+        sh "ln -sf ${filePath} ${symlinkPath}"
+        echo "Symlink created successfully"
 
+        // Reload Nginx to apply changes
+        sh "nginx -s reload"
+        echo "Nginx reloaded successfully"
+    } catch (Exception e) {
+        error "Failed to write Nginx config or reload: ${e.getMessage()}"
+    }
 }
