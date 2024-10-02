@@ -1,27 +1,22 @@
 def call(String subdomain, String domain, String deployPort) {
-    // Check if the variables are passed
-    if (!subdomain || !domain || !deployPort) {
-        error "subdomain, domain, and deployPort must be provided"
+    // Ensure required variables are provided
+    if (!subdomain?.trim() || !domain?.trim() || !deployPort?.trim()) {
+        error "subdomain, domain, and deployPort must be provided and cannot be empty"
     }
 
-    // Echo the variables to check if they are passed down correctly
     echo "Subdomain: ${subdomain}"
     echo "Domain: ${domain}"
     echo "Deploy Port: ${deployPort}"
 
-    if (subdomain.trim() == "" || domain.trim() == "" || deployPort.trim() == "") {
-        error "subdomain, domain, and deployPort cannot be empty"
-    }
-
-    // Use double quotes for the sh block to allow Groovy variable interpolation
+    // Using Groovy variable interpolation inside the shell block
     sh """
     #!/bin/bash
 
     folder_name="${subdomain}.${domain}"
     file_path="/etc/nginx/sites-available/\${folder_name}"
 
-    # Write the specific Nginx configuration to the file
-    cat  << EOF > \${file_path}
+    # Create Nginx configuration file
+    cat > "\${file_path}" << EOF
     server {
         listen 80;
         server_name ${subdomain}.${domain};
@@ -35,5 +30,11 @@ def call(String subdomain, String domain, String deployPort) {
         }
     }
     EOF
+
+    # Enable the site by creating a symbolic link
+    ln -sf "\${file_path}" /etc/nginx/sites-enabled/\${folder_name}
+
+    # Reload Nginx to apply the new configuration
+    nginx -s reload
     """
 }
