@@ -8,18 +8,21 @@ def call(String subdomain, String domain, String deployPort) {
     def symlinkPath = "/etc/nginx/sites-enabled/"
 
 
-    echo >> "server {
-                     listen 80;
-                     server_name ${subdomain}.${domain};
+    cat <<EOF > ${filePath}
+    server {
+        listen 80;
+        server_name ${subdomain}.${domain};
 
-                     location / {
-                         proxy_pass http://localhost:${deployPort};
-                         proxy_set_header Host \$host;
-                         proxy_set_header X-Real-IP \$remote_addr;
-                         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                         proxy_set_header X-Forwarded-Proto \$scheme;
-                     }
-                 } " > ${filePath}
+        location / {
+            proxy_pass http://localhost:${deployPort};
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+        }
+    }
+    EOF
+
 
     def nginxConfig = """
     server {
