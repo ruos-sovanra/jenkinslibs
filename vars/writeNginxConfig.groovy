@@ -29,7 +29,5 @@ def call(String subdomain, String domain, String deployPort) {
     writeFile file: filePath, text: nginxConfig
     echo "Nginx config written successfully"
 
-    echo "Creating symlink to /etc/nginx/sites-enabled/"
-    sh "ln -s ${filePath} /etc/nginx/sites-enabled/"
-    echo "Symlink created successfully"
+
 }
