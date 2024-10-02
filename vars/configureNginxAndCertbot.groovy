@@ -1,5 +1,5 @@
 def call(String subdomain, String domain, String deployPort) {
-    // Ensure required variables are provided
+    // Ensure required variables are provided and non-empty
     if (!subdomain?.trim() || !domain?.trim() || !deployPort?.trim()) {
         error "subdomain, domain, and deployPort must be provided and cannot be empty"
     }
@@ -15,8 +15,8 @@ def call(String subdomain, String domain, String deployPort) {
     folder_name="${subdomain}.${domain}"
     file_path="/etc/nginx/sites-available/\${folder_name}"
 
-    # Create Nginx configuration file
-    cat > "\${file_path}" << EOF
+    # Create Nginx configuration file using 'tee' to write to the file
+    tee "\${file_path}" << EOF
     server {
         listen 80;
         server_name ${subdomain}.${domain};
