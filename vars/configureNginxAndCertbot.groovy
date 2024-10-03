@@ -45,4 +45,17 @@ def call(String subdomain, String domain, String deployPort) {
 
     echo "Nginx configuration for ${subdomain}.${domain} has been created and deployed."
     """
+
+    sh """
+    #!/bin/bash
+
+    # Request a certificate for the domain
+    certbot --nginx -d ${subdomain}.${domain}
+
+    # Test Nginx configuration and reload Nginx
+    nginx -t && systemctl reload nginx
+
+    echo "SSL certificate for ${subdomain}.${domain} has been created and deployed."
+    """
+
 }
