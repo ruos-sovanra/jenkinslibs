@@ -8,33 +8,31 @@ def call(String subdomain, String domain, String deployPort) {
     echo "Domain: ${domain}"
     echo "Deploy Port: ${deployPort}"
 
+    def templateFile = libraryResource 'nginx Templates/configNginx.template'
+    def configFilePath = "/etc/nginx/sites-available/${subdomain}.${domain}"
+
+    // Replace placeholders in the template
+    def configContent = templateFile.replace('${domain}', domain)
+                                    .replace('${subdomain}', subdomain)
+                                    .replace('${deployPort}', deployPort)
+
+    // Write the configuration to the file
+    writeFile file: configFilePath, text: configContent
+
+    // Debug step: print out the variables to ensure they are not empty
+    echo "Generated Nginx Config:"
+    echo configContent
+
     // Using Groovy variable interpolation inside the shell block
     sh """
     #!/bin/bash
 
-    folder_name="${subdomain}.${domain}"
-    file_path="/etc/nginx/sites-available/\${folder_name}"
+    # Create a symlink to enable the site in Nginx
+    ln -sf ${configFilePath} /etc/nginx/sites-enabled/${subdomain}.${domain}
 
-    # Create Nginx configuration file using 'tee' to write to the file
-    tee "\${file_path}" << EOF
-    server {
-        listen 80;
-        server_name ${subdomain}.${domain};
+    # Test Nginx configuration and reload Nginx
+    nginx -t && systemctl reload nginx
 
-        location / {
-            proxy_pass http://localhost:${deployPort};
-            proxy_set_header Host \\$host;
-            proxy_set_header X-Real-IP \\$remote_addr;
-            proxy_set_header X-Forwarded-For \\$proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto \\$scheme;
-        }
-    }
-    EOF
-
-    # Enable the site by creating a symbolic link
-    ln -sf "\${file_path}" /etc/nginx/sites-enabled/\${folder_name}
-
-    # Reload Nginx to apply the new configuration
-    nginx -s reload
+    echo "Nginx configuration for ${subdomain}.${domain} has been created and deployed."
     """
 }
