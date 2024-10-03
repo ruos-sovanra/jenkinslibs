@@ -28,11 +28,16 @@ def call(String subdomain, String domain, String deployPort) {
     #!/bin/bash
 
     # Create a symlink to enable the site in Nginx
-    ln -sf ${configFilePath} /etc/nginx/sites-enabled/${subdomain}.${domain}
+    ln -s ${configFilePath} /etc/nginx/sites-enabled/
 
     # Test Nginx configuration and reload Nginx
     nginx -t && systemctl reload nginx
 
     echo "Nginx configuration for ${subdomain}.${domain} has been created and deployed."
+
+    certbot --nginx -d ${subdomain}.${domain}
+
+    echo "Certbot has been run for ${subdomain}.${domain}"
+    echo "Your website is now live at https://${subdomain}.${domain}"
     """
 }
