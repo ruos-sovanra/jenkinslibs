@@ -11,6 +11,12 @@ def call(String subdomain, String domain, String deployPort) {
     def templateFile = libraryResource 'nginx Templates/configNginx.template'
     def configFilePath = "/etc/nginx/sites-available/${subdomain}.${domain}"
 
+    // Check if the config file already exists
+    if (fileExists(configFilePath)) {
+        echo "Nginx configuration for ${subdomain}.${domain} already exists."
+        return // Exit the function early to avoid overwriting
+    }
+
     // Replace placeholders in the template
     def configContent = templateFile.replace('${domain}', domain)
                                     .replace('${subdomain}', subdomain)
@@ -38,6 +44,8 @@ def call(String subdomain, String domain, String deployPort) {
     certbot --nginx -d ${subdomain}.${domain}
 
     echo "Certbot has been run for ${subdomain}.${domain}"
-    echo "Your website is now live at https://${subdomain}.${domain}"
+
     """
+
+    echo "Your website is now live at https://${subdomain}.${domain}"
 }
