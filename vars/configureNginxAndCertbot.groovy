@@ -8,8 +8,18 @@ def call(String subdomain, String domain, String deployPort) {
     echo "Domain: ${domain}"
     echo "Deploy Port: ${deployPort}"
 
-    def templateFile = libraryResource 'nginx Templates/configNginx.template'
     def configFilePath = "/etc/nginx/sites-available/${subdomain}.${domain}"
+
+    // Check if the config file already exists
+    def configExists = sh(script: "if [ -f ${configFilePath} ]; then echo 'exists'; else echo 'not exists'; fi", returnStdout: true).trim()
+
+    if (configExists == 'exists') {
+        echo "Configuration for ${subdomain}.${domain} already exists. Skipping creation."
+        return
+    }
+
+    // Load the Nginx template file
+    def templateFile = libraryResource 'nginx Templates/configNginx.template'
 
     // Replace placeholders in the template
     def configContent = templateFile.replace('${domain}', domain)
