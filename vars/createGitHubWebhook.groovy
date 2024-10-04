@@ -1,4 +1,7 @@
 def call(String githubToken, String repoUrl) {
+
+    echo "Setting up GitHub webhook for repository: ${repoUrl}"
+    echo "GitHub Token: ${githubToken}"
     // Skip execution if githubToken or repoUrl is null
     if (!githubToken || !repoUrl) {
         echo "githubToken or repoUrl is null. Skipping execution."
