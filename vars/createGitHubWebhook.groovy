@@ -30,10 +30,10 @@ def call(String githubToken, String repoUrl) {
     fi
 
     # Extract GITHUB_USER_OR_ORG and REPO_NAME from the URL using regex
-    if [[ $REPO_URL =~ github\\.com[:/](.+)/(.+)\\.git ]]; then
+    if [[ \$REPO_URL =~ github\\.com[:/](.+)/(.+)\\.git ]]; then
         GITHUB_USER_OR_ORG="\${BASH_REMATCH[1]}"
         REPO_NAME="\${BASH_REMATCH[2]}"
-    elif [[ $REPO_URL =~ github\\.com[:/](.+)/(.+) ]]; then
+    elif [[ \$REPO_URL =~ github\\.com[:/](.+)/(.+) ]]; then
         GITHUB_USER_OR_ORG="\${BASH_REMATCH[1]}"
         REPO_NAME="\${BASH_REMATCH[2]}"
     else
