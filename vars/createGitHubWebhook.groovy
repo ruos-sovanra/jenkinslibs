@@ -21,12 +21,13 @@ def call(String githubToken, String repoUrl) {
     # Webhook Configuration
     WEBHOOK_URL="https://jenkins.psa-khmer.world/github-webhook/"  # Replace with your webhook URL
     WEBHOOK_SECRET="1102b43d4bae5e52ede6fc05ee5dc20e91"            # Replace with your webhook secret
-    WEBHOOK_EVENTS='["push"]'   # Customize the events you want
+    WEBHOOK_EVENTS=("push")   # Customize the events you want
 
     # Check for jq (JSON processor)
     if ! command -v jq &> /dev/null; then
         echo "jq could not be found. Installing jq..."
-        sudo apt-get update && sudo apt-get install -y jq
+        sudo apt-get update
+        sudo apt-get install -y jq
     fi
 
     # Extract GITHUB_USER_OR_ORG and REPO_NAME from the URL using regex
@@ -41,6 +42,9 @@ def call(String githubToken, String repoUrl) {
         exit 1
     fi
 
+    # Convert WEBHOOK_EVENTS array to a JSON-compatible string
+    WEBHOOK_EVENTS_JSON=\$(printf '%s\n' "\${WEBHOOK_EVENTS[@]}" | jq -R . | jq -s .)
+
     # Function to create webhook for the specific repository
     create_webhook() {
         local repo=\$1
@@ -52,7 +56,7 @@ def call(String githubToken, String repoUrl) {
             -d '{
                 "name": "web",
                 "active": true,
-                "events": '"\$WEBHOOK_EVENTS"',
+                "events": '"\$WEBHOOK_EVENTS_JSON"',
                 "config": {
                     "url": "'"\$WEBHOOK_URL"'",
                     "content_type": "json",
