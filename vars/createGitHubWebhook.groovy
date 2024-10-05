@@ -3,6 +3,9 @@ def call(String githubToken, String repoUrl) {
     def webhookSecret = "1102b43d4bae5e52ede6fc05ee5dc20e91"
     def webhookEvents = '["push"]'
 
+    echo "Creating webhook for ${repoUrl}..."
+    echo "Webhook URL: ${githubToken}"
+
     // Validate GitHub Token
     if (!githubToken) {
         error "GitHub token is required to create the webhook."
