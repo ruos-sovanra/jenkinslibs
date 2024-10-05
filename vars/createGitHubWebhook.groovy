@@ -8,11 +8,12 @@ def call(String githubToken, String repoUrl) {
     echo "Repository URL: ${repoUrl}"
 
     // List the contents of the current directory for debugging
-    sh "ls "
+    sh "ls"
 
-    // Execute the webhook setup directly using a Bash script embedded in the Groovy script
+    // Execute the webhook setup using bash
     sh """
     #!/bin/bash
+    set -e
 
     # GitHub Token and Repository URL from the parameters
     GITHUB_TOKEN="${githubToken}"
