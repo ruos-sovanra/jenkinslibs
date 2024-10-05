@@ -1,5 +1,3 @@
-#!/usr/bin/env groovy
-
 def call(String githubToken, String repoUrl) {
     def webhookUrl = "https://jenkins.psa-khmer.world/github-webhook/"
     def webhookSecret = "1102b43d4bae5e52ede6fc05ee5dc20e91"
@@ -15,10 +13,13 @@ def call(String githubToken, String repoUrl) {
         error "GitHub repository URL is required."
     }
 
-    // Extract user/organization and repository name
-    def userOrOrg, repoName
-    def matcher = repoUrl =~ /github\.com[:\/](.+?)\/(.+?)(\.git)?$/
-    if (matcher) {
+    // Extract user/organization and repository name (do this inline)
+    def userOrOrg = ''
+    def repoName = ''
+
+    // Perform the regex matching in one step to avoid serialization issues
+    if (repoUrl ==~ /github\.com[:\/](.+?)\/(.+?)(\.git)?$/) {
+        def matcher = repoUrl =~ /github\.com[:\/](.+?)\/(.+?)(\.git)?$/
         userOrOrg = matcher[0][1]
         repoName = matcher[0][2]
     } else {
