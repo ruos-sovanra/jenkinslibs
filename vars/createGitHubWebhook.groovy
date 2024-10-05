@@ -25,8 +25,8 @@ def call(String githubToken, String repoUrl) {
 
     # Check for jq (JSON processor)
     if ! command -v jq &> /dev/null; then
-        echo "jq could not be found. Please install jq."
-        exit 1
+        echo "jq could not be found. Installing jq..."
+        sudo apt-get update && sudo apt-get install -y jq
     fi
 
     # Extract GITHUB_USER_OR_ORG and REPO_NAME from the URL using regex
