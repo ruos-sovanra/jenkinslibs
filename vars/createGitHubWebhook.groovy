@@ -12,7 +12,8 @@ def call(String githubToken, String repoUrl) {
     writeFile file: tempFile, text: "${githubToken}\n${repoUrl}"
 
     // List the contents of the vars directory
-    sh "ls"
+    sh "ls "
+    sh "cat temp_input.txt"
 
     // Make the shell script executable
     sh "chmod +x vars/createGitHubWebhook.sh"
